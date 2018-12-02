@@ -1,0 +1,457 @@
+# htaccess
+
+> Some tips and tricks for your .htaccess file (Apache)
+
+## Table of Contents
+
+### Files
+
+#### Block access to some files based on their names
+
+Refuse requests to these files:
+
+```htaccess
+<FilesMatch "(file_1\.gif|file_2\.png)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+```
+
+#### Block access to some files based on their extensions
+
+Blocks access to all files except those whose extension is mentioned in the list below:
+
+**Option 1**
+
+```htaccess
+RewriteCond %{REQUEST_FILENAME} !(.*)\.(bmp|css|eot|html?|icon?|jpe?g|js|gif|pdf|png|svg|te?xt|ttf|webp|woff2?|xml|zip)$
+RewriteRule . - [F]
+```
+
+**Option 2**
+
+```htaccess
+RewriteCond %{REQUEST_FILENAME} !\.(ico?n|img|gif|jpe?g|png|css|map)$ [NC]
+RewriteCond %{REQUEST_FILENAME} !\.js(\?.*)?$ [NC]
+RewriteCond %{REQUEST_FILENAME} !\.(eot|svg|ttf|woff2?)(\?.*)?$ [NC]
+# Comment this line if you wish to make possible to access the /libraries folder by url.
+RewriteRule . - [F]
+```
+
+#### Block access to hidden files & directories
+
+Don't allow to access to a file or folder when the name start with a dot (i.e. a hidden file / folder):
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{SCRIPT_FILENAME} -d [OR]
+    RewriteCond %{SCRIPT_FILENAME} -f
+    RewriteRule "(^|/)\." - [F]
+</IfModule>
+```
+
+### Force
+
+#### Force download
+
+Don't allow the browser to download such files but tell him how to display them (text in the example):
+
+```htaccess
+<FilesMatch "\.(tex|log|aux)$">
+    Header set Content-Type text/plain
+</FilesMatch>
+```
+
+##### Prevent downloading
+
+For instance, force download for pdf files:
+
+```htaccess
+<FilesMatch "\.(pdf)$">
+    ForceType application/octet-stream
+    Header set Content-Disposition attachment
+</FilesMatch>
+```
+
+#### Force https
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+```
+
+#### Force https and www
+
+Rewrite example.com → www.example.com
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteCond %{SERVER_ADDR} !=127.0.0.1
+    RewriteCond %{SERVER_ADDR} !=::1
+    RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+```
+
+#### Force https and remove www
+
+Rewrite www.example.com → example.com
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_HOST} ^www\.(.+)\$ [NC]
+    RewriteCond %{SERVER_ADDR} !=127.0.0.1
+    RewriteCond %{SERVER_ADDR} !=::1
+    RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+```
+
+#### Force to remove www when http is used
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+```
+
+#### Force www when http is used
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteCond %{SERVER_ADDR} !=127.0.0.1
+    RewriteCond %{SERVER_ADDR} !=::1
+    RewriteRule ^ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+```
+
+### Misc
+
+#### Disable error reporting
+
+Don't show errors (just like a `error_reporting=E_NONE` does)
+
+```htaccess
+<IfModule mod_php5.c>
+    php_flag display_errors off
+    php_flag log_errors on
+    php_flag track_errors on
+    php_value error_log error.log
+</IfModule>
+```
+
+#### Enable error reporting
+
+Show errors (just like a `error_reporting=E_ALL` does).
+
+Only use this on a development server otherwise you'll expose sensitive information to your visitor.
+
+```htaccess
+<IfModule mod_php5.c>
+    php_flag display_errors on
+    php_flag log_errors on
+    php_flag track_errors on
+    php_value error_log error.log
+</IfModule>
+```
+
+#### Enable a maintenance mode
+
+Redirect every requests done to your site to a specific page (called `maintenance.php` here below). Just think to replace the code `ADD_YOUR_IP_HERE` by your current IP adress.
+
+```htaccess
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REMOTE_ADDR} !127.0.0.1 [NC]
+    RewriteCond %{REMOTE_ADDR} !localhost [NC]
+    RewriteCond %{REMOTE_ADDR} !ADD_YOUR_IP_HERE [NC]
+    RewriteCond %{REQUEST_FILENAME} !maintenance.php(.*)$ [NC]
+    RewriteRule .* /maintenance.php [L,NC,QSA]
+</IfModule>
+```
+
+### Optimization
+
+#### Compress files based on their type or extensions.
+
+```htaccess
+<IfModule mod_deflate.c>
+    SetOutputFilter DEFLATE
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE application/font-otf application/font-ttf application/font-woff application/javascript application/json application/manifest+json application/rss+xml application/vnd.ms-fontobject application/xhtml+xml application/xml application/x-javascript image/svg+xml text/css text/csv text/html text/javascript text/plain text/xml
+    </IfModule>
+</IfModule>
+
+# On somes hosters, mod_deflate isn't installed but well mod_gzip.
+<IfModule mod_gzip.c>
+    mod_gzip_on Yes
+    mod_gzip_dechunk Yes
+    mod_gzip_item_include file      \.(html?|txt|css|js|php|pl)$
+    mod_gzip_item_include handler   ^cgi-script$
+    mod_gzip_item_include mime      ^text/.*
+    mod_gzip_item_include mime      ^application/font-otf
+    mod_gzip_item_include mime      ^application/font-ttf
+    mod_gzip_item_include mime      ^application/font-woff
+    mod_gzip_item_include mime      ^application/vnd.ms-fontobject
+    mod_gzip_item_include mime      ^application/x-javascript.*
+    mod_gzip_item_exclude mime      ^image/.*
+    mod_gzip_item_include mime      ^image/svg+xml*
+    mod_gzip_item_exclude rspheader ^Content-Encoding:.*gzip.*
+</IfModule>
+```
+
+#### Add expiration (expires headers)
+
+Enable ETAGs
+
+```htaccess
+<IfModule mod_headers.c>
+    # Keep the connection alive (not really related to expirations but really increase download speed
+    Header set Connection keep-alive
+</IfModule>
+
+<IfModule mod_expires.c>
+
+    ExpiresActive On
+
+    # Default expiration: 1 hour after request
+    ExpiresDefault "access plus 1 month"
+
+    # CSS and JS expiration
+    ExpiresByType text/css "access 1 month"
+    ExpiresByType text/javascript "access 1 month"
+    ExpiresByType application/javascript "access 1 month"
+    ExpiresByType application/x-javascript "access 1 month"
+
+    # webfonts
+    ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+    ExpiresByType application/x-font-woff "access 1 year"
+    ExpiresByType application/x-font-woff2 "access 1 year"
+    ExpiresByType font/eot "access plus 1 month"
+    ExpiresByType font/truetype "access 1 year"
+    ExpiresByType font/opentype "access 1 year"
+    ExpiresByType font/woff "access 1 year"
+    ExpiresByType image/svg+xml "access 1 year"
+    ExpiresByType application/vnd.ms-fontobject "access 1 year"
+    ExpiresByType application/font-otf "access 1 year"
+    ExpiresByType application/font-ttf "access 1 year"
+    ExpiresByType application/font-woff "access 1 year"
+    ExpiresByType application/x-font-ttf "access 1 year"
+
+    # Media
+    AddType image/vnd.microsoft.icon .cur
+    ExpiresByType application/ico "access 1 year"
+    ExpiresByType audio/ogg "access plus 1 month"
+    ExpiresByType image/bmp "access plus 1 month"
+    ExpiresByType image/gif "access 1 month"
+    ExpiresByType image/ico "access 1 year"
+    ExpiresByType image/icon "access 1 year"
+    ExpiresByType image/jpg "access 1 month"
+    ExpiresByType image/jpeg "access 1 month"
+    ExpiresByType image/png "access 1 month"
+    ExpiresByType image/svg+xml "access 1 month"
+    ExpiresByType image/vnd.microsoft.icon "access 1 year"
+    ExpiresByType image/webp "access 1 month"
+    ExpiresByType image/x-icon "access 1 year"
+    ExpiresByType text/ico "access 1 year"
+    ExpiresByType video/mp4 "access plus 1 month"
+    ExpiresByType video/ogg "access plus 1 month"
+    ExpiresByType video/webm "access plus 1 month"
+
+    # Flash
+    ExpiresByType application/x-shockwave-flash "access plus 2 months"
+    ExpiresByType image/swf "access plus 2592000 seconds"
+
+    # Files
+    ExpiresByType application/pdf "access 1 week"
+    ExpiresByType application/x-gzip "access 1 month"
+    ExpiresByType text/x-component "access 1 month"
+
+    # Data
+    ExpiresByType application/atom+xml "access plus 1 hour"
+    ExpiresByType application/rdf+xml "access plus 1 hour"
+    ExpiresByType application/rss+xml "access plus 1 hour"
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+    ExpiresByType application/ld+json  "access plus 0 seconds"
+    ExpiresByType application/schema+json "access plus 0 seconds"
+    ExpiresByType application/vnd.geo+json "access plus 0 seconds"
+    ExpiresByType application/xml "access plus 0 seconds"
+    ExpiresByType text/xml "access plus 0 seconds"
+</IfModule>
+
+# Perhaps the MIME type of SWF is incorrect, in this case, the FileMatch will do the job
+<IfModule mod_headers.c>
+    <FilesMatch "\.(swf)$">
+        Header set Expires "access plus 2592000 seconds"
+    </FilesMatch>
+</IfModule>
+```
+
+### Protection
+
+#### Deny All Access
+
+```htaccess
+## Apache 2.2
+Deny from all
+
+## Apache 2.4
+# Require all denied
+```
+
+#### Deny All Access except you
+
+Just replace `xxx.xxx.xxx.xxx` by your IP adress.
+
+```htaccess
+## Apache 2.2
+Order deny,allow
+Deny from all
+Allow from xxx.xxx.xxx.xxx
+
+## Apache 2.4
+# Require all denied
+# Require ip xxx.xxx.xxx.xxx
+```
+
+#### Stops a browser from trying to MIME-sniff
+
+```htaccess
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+```
+
+#### Avoid Clickjacking and enable XSS-protection for browsers
+
+```htaccess
+<FilesMatch "\.(pl|php|cgi|spl)$">
+    <IfModule mod_headers.c>
+        # security
+        Header set X-Frame-Options "DENY"
+        Header set X-XSS-Protection "1; mode=block"
+    </IfModule>
+</FilesMatch>
+```
+
+#### Disable script execution
+
+Put these lines in f.i. `/tmp/.htaccess` to prevent execution of scripts in the `/tmp` folder.
+
+```htaccess
+# secure directory by disabling script execution
+AddHandler cgi-script .php .pl .py .jsp .asp .sh .cgi
+Options -ExecCGI
+
+##Deny access to all CGI, Perl, PHP and Python
+<FilesMatch "\.(asp?x|cgi|php|pl|py)$">
+    Deny from all
+</FilesMatch>
+```
+
+#### Disallow listing for directories
+
+Don't allow the webserver to provide the list of files / folders like a `dir` does.
+
+```htaccess
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+```
+
+#### htpasswd
+
+- `.htpasswd` generator : [http://aspirine.org/htpasswd.html](http://aspirine.org/htpasswd.html)
+
+##### File password
+
+```htaccess
+AuthName "File access restriction"
+AuthType Basic
+AuthUserFile /home/your_account/.htpasswd
+
+<Files "confidential.md">
+Require valid-user
+</Files>
+```
+
+##### Folder password
+
+Place these lines in a file called `.htaccess` in the folder to protect (f.i. `folder_name`):
+
+```htaccess
+AuthType Basic
+AuthName "This folder is protected"
+AuthUserFile /home/your_account/folder_name/.htpasswd
+Require valid-user
+```
+
+#### Whitelist - Disallow access to all files except the ones mentioned
+
+```htaccess
+# prevent accessing to all files excepted those mentioned (case sensitive!)
+
+<FilesMatch "(?<!\.png|\.jpe?g|\.gif|\.svg|\.icon?)$">
+# Apache 2.2
+#    deny from all
+# Apache 2.4
+#    Require all denied
+</FilesMatch>
+```
+
+### Redirect
+
+#### Redirect an entire site
+
+```htaccess
+Redirect 301 / https://www.newsite.com/
+```
+
+#### Permanent redirection
+
+```htaccess
+RedirectPermanent /old.php http://www.yoursite.com/new.php
+```
+
+#### Temporary redirection
+
+```htaccess
+Redirect 301 /old.php http://www.yoursite.com/new.php
+```
+
+#### Redirect a subfolder
+
+For instance, redirect `/category/apple.php` to `apple.php`
+
+```htaccess
+RedirectMatch 301 ^/category/(.*)$ /$1
+```
+
+or solve spelling issue by f.i. redirect every requests to the `fruit` folder to the plural form.
+
+```htaccess
+RedirectMatch 301 ^/fruit/(.*)$ /fruits/$1
+```
+
+### Search engine
+
+#### Disallow indexing
+
+Put these lines in f.i. `yoursite/administrator` to inform search engines that you don't allow him to index files in that folder (and sub-folders).
+
+```htaccess
+# Be sure that pages under this folder won't be indexed
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+```
+
+## License
+
+[MIT](LICENSE)
