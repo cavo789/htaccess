@@ -4,44 +4,40 @@
 
 ## Table of Contents
 
-- [Files](#files)
-  - [Block access to some files based on their names](#block-access-to-some-files-based-on-their-names)
-  - [Block access to some files based on their extensions](#block-access-to-some-files-based-on-their-extensions)
-  - [Block access to hidden files & directories](#block-access-to-hidden-files--directories)
-- [Force](#force)
-  - [Force download](#force-download)
-    - [Prevent downloading](#prevent-downloading)
-  - [Force https](#force-https)
-  - [Force https and www](#force-https-and-www)
-  - [Force https and remove www](#force-https-and-remove-www)
-  - [Force to remove www when http is used](#force-to-remove-www-when-http-is-used)
-  - [Force www when http is used](#force-www-when-http-is-used)
-- [Misc](#misc)
-  - [Disable error reporting](#disable-error-reporting)
-  - [Enable error reporting](#enable-error-reporting)
-  - [Enable a maintenance mode](#enable-a-maintenance-mode)
-- [Optimization](#optimization)
-  - [Compress files based on their type or extensions.](#compress-files-based-on-their-type-or-extensions)
-  - [Add expiration (expires headers)](#add-expiration-expires-headers)
-- [Protection](#protection)
-  - [Deny All Access](#deny-all-access)
-  - [Deny All Access except you](#deny-all-access-except-you)
-  - [Stops a browser from trying to MIME-sniff](#stops-a-browser-from-trying-to-mime-sniff)
-  - [Avoid Clickjacking and enable XSS-protection for browsers](#avoid-clickjacking-and-enable-xss-protection-for-browsers)
-  - [Disable script execution](#disable-script-execution)
-  - [Disallow listing for directories](#disallow-listing-for-directories)
-  - [htpasswd](#htpasswd)
-    - [File password](#file-password)
-    - [Folder password](#folder-password)
-  - [Whitelist - Disallow access to all files except the ones mentioned](#whitelist---disallow-access-to-all-files-except-the-ones-mentioned)
-- [Redirect](#redirect)
-  - [Redirect an entire site](#redirect-an-entire-site)
-  - [Permanent redirection](#permanent-redirection)
-  - [Temporary redirection](#temporary-redirection)
-  - [Redirect a subfolder](#redirect-a-subfolder)
-- [Search engine](#search-engine)
-  - [Disallow indexing](#disallow-indexing)
-- [License](#license)
+* [Files](#files)
+    * [Block access to some files based on their names](#block-access-to-some-files-based-on-their-names)
+    * [Block access to some files based on their extensions](#block-access-to-some-files-based-on-their-extensions)
+    * [Block access to hidden files & directories](#block-access-to-hidden-files--directories)
+* [Force](#force)
+    * [Force download](#force-download)
+        * [Prevent downloading](#prevent-downloading)
+    * [Force https and www, compatible hstspreload](#force-https-and-www-compatible-hstspreload)
+* [Misc](#misc)
+    * [Disable error reporting](#disable-error-reporting)
+    * [Enable error reporting](#enable-error-reporting)
+    * [Enable a maintenance mode](#enable-a-maintenance-mode)
+* [Optimization](#optimization)
+    * [Compress files based on their type or extensions.](#compress-files-based-on-their-type-or-extensions)
+    * [Add expiration (expires headers)](#add-expiration-expires-headers)
+* [Protection](#protection)
+    * [Deny All Access](#deny-all-access)
+    * [Deny All Access except you](#deny-all-access-except-you)
+    * [Stops a browser from trying to MIME-sniff](#stops-a-browser-from-trying-to-mime-sniff)
+    * [Avoid Clickjacking and enable XSS-protection for browsers](#avoid-clickjacking-and-enable-xss-protection-for-browsers)
+    * [Disable script execution](#disable-script-execution)
+    * [Disallow listing for directories](#disallow-listing-for-directories)
+    * [htpasswd](#htpasswd)
+        * [File password](#file-password)
+        * [Folder password](#folder-password)
+    * [Whitelist - Disallow access to all files except the ones mentioned](#whitelist---disallow-access-to-all-files-except-the-ones-mentioned)
+* [Redirect](#redirect)
+    * [Redirect an entire site](#redirect-an-entire-site)
+    * [Permanent redirection](#permanent-redirection)
+    * [Temporary redirection](#temporary-redirection)
+    * [Redirect a subfolder](#redirect-a-subfolder)
+* [Search engine](#search-engine)
+    * [Disallow indexing](#disallow-indexing)
+* [License](#license)
 
 ### Files
 
@@ -112,60 +108,27 @@ For instance, force download for pdf files:
 </FilesMatch>
 ```
 
-#### Force https
+#### Force https and www, compatible hstspreload
+
+> When implemented in your .htaccess, try to get access to `yoursite.com` or `http://yoursite.com` should redirect to `https://www.yoursite.com`.
+
+Also, test your site with [https://hstspreload.org/](https://hstspreload.org/) to verify that your preloading is correct (green).   
 
 ```htaccess
 <IfModule mod_rewrite.c>
-    RewriteCond %{HTTPS} !=on
-    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</IfModule>
-```
 
-#### Force https and www
+	# Rewrite the URL to force https and www.
+	RewriteEngine On
 
-Rewrite example.com → www.example.com
+	# Compliant with hstspreload.org : first redirect to https if needed
+	RewriteCond %{HTTPS} !=on
+	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-```htaccess
-<IfModule mod_rewrite.c>
-    RewriteCond %{HTTP_HOST} !^www\. [NC]
-    RewriteCond %{SERVER_ADDR} !=127.0.0.1
-    RewriteCond %{SERVER_ADDR} !=::1
-    RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</IfModule>
-```
+	#   then redirect to www. when the prefix wasn't mentionned
+	# hstspreload.org seems to not really like to make the two at once
+	RewriteCond %{HTTP_HOST} !^www\.
+	RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-#### Force https and remove www
-
-Rewrite www.example.com → example.com
-
-```htaccess
-<IfModule mod_rewrite.c>
-    RewriteCond %{HTTP_HOST} ^www\.(.+)\$ [NC]
-    RewriteCond %{SERVER_ADDR} !=127.0.0.1
-    RewriteCond %{SERVER_ADDR} !=::1
-    RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
-</IfModule>
-```
-
-#### Force to remove www when http is used
-
-```htaccess
-<IfModule mod_rewrite.c>
-    RewriteCond %{HTTPS} !=on
-    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-    RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
-</IfModule>
-```
-
-#### Force www when http is used
-
-```htaccess
-<IfModule mod_rewrite.c>
-    RewriteCond %{HTTPS} !=on
-    RewriteCond %{HTTP_HOST} !^www\. [NC]
-    RewriteCond %{SERVER_ADDR} !=127.0.0.1
-    RewriteCond %{SERVER_ADDR} !=::1
-    RewriteRule ^ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </IfModule>
 ```
 
