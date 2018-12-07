@@ -1,3 +1,5 @@
+![banner](image/banner.jpg)
+
 # htaccess
 
 > Some tips and tricks for your .htaccess file (Apache)
@@ -112,7 +114,7 @@ For instance, force download for pdf files:
 
 > When implemented in your .htaccess, try to get access to `yoursite.com` or `http://yoursite.com` should redirect to `https://www.yoursite.com`.
 
-Also, test your site with [https://hstspreload.org/](https://hstspreload.org/) to verify that your preloading is correct (green).   
+Also, test your site with [https://hstspreload.org/](https://hstspreload.org/) to verify that your preloading is correct (green).
 
 ```htaccess
 <IfModule mod_rewrite.c>
