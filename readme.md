@@ -6,7 +6,6 @@
 
 ## Table of Contents
 
-* [Table of Contents](#table-of-contents)
 * [CSP - Content Security Policy](#csp---content-security-policy)
 * [Files](#files)
     * [Block access to some files based on their names](#block-access-to-some-files-based-on-their-names)
@@ -82,8 +81,12 @@ Be inspired by the following lines:
    # (f.i. fonts.googleapis.com, ...)
    # This should be done for scripts, images, styles, frame, ...
    # Replace XXXXXXXXXXXXXX by your site name like https://www.yoursite.com
-
-   Header set Content-Security-Policy: "default-src 'self'; base-uri 'self'; form-action 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://ajax.googleapis.com https://www.google.com https://www.google-analytics.com https://code.jquery.com https://www.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://unpkg.com; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com; img-src 'self' data: https://www.paypal.com https://raw.githubusercontent.com; frame-src XXXXXXXXXXXXXX https://www.google.com https://www.youtube.com; frame-ancestors 'none'"
+   # ----------------------------------------------------------------------
+   # UNCOMMENT THE FOLLOWING LINE ONLY IF YOU KNOW WHAT YOU'RE DOING.
+   # THIS LINE CAN BREAK YOUR SITE SO, ENABLE IT AND TEST YOUR SITE A LOT,
+   # ALL PAGES IF POSSIBLE.
+   # ----------------------------------------------------------------------
+   #Header set Content-Security-Policy: "default-src 'self'; base-uri 'self'; form-action 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://ajax.googleapis.com https://www.google.com https://www.google-analytics.com https://code.jquery.com https://www.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://unpkg.com; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com; img-src 'self' data: https://www.paypal.com https://raw.githubusercontent.com; frame-src XXXXXXXXXXXXXX https://www.google.com https://www.youtube.com; frame-ancestors 'none'"
 </IfModule>
 ```
 
