@@ -6,13 +6,15 @@
 
 ## Table of Contents
 
+* [Table of Contents](#table-of-contents)
+* [CSP - Content Security Policy](#csp---content-security-policy)
 * [Files](#files)
     * [Block access to some files based on their names](#block-access-to-some-files-based-on-their-names)
     * [Block access to some files based on their extensions](#block-access-to-some-files-based-on-their-extensions)
     * [Block access to hidden files & directories](#block-access-to-hidden-files--directories)
 * [Force](#force)
     * [Force download](#force-download)
-        * [Prevent downloading](#prevent-downloading)
+    * [Prevent downloading](#prevent-downloading)
     * [Force https and www, compatible hstspreload](#force-https-and-www-compatible-hstspreload)
 * [Misc](#misc)
     * [Disable error reporting](#disable-error-reporting)
@@ -29,8 +31,8 @@
     * [Disable script execution](#disable-script-execution)
     * [Disallow listing for directories](#disallow-listing-for-directories)
     * [htpasswd](#htpasswd)
-        * [File password](#file-password)
-        * [Folder password](#folder-password)
+    * [File password](#file-password)
+    * [Folder password](#folder-password)
     * [Whitelist - Disallow access to all files except the ones mentioned](#whitelist---disallow-access-to-all-files-except-the-ones-mentioned)
 * [Redirect](#redirect)
     * [Redirect an entire site](#redirect-an-entire-site)
@@ -40,6 +42,50 @@
 * [Search engine](#search-engine)
     * [Disallow indexing](#disallow-indexing)
 * [License](#license)
+
+### CSP - Content Security Policy
+
+Be inspired by the following lines:
+
+```htaccess
+<IfModule mod_headers.c>
+
+   # Add CSP (Content Security Policy)
+   Header set Protected-by "What-you-want-or-just-drop-this-line"
+
+   # Replace XXXXXXXXXXXXXX by your site name like www.yoursite.com
+   Header always set Feature-Policy "camera 'none'; fullscreen 'self'; microphone 'none'; payment 'none'; sync-xhr 'self' XXXXXXXXXXXXXX"
+
+   # Blocks a request if the requested type is
+   #    "style" and the MIME type is not "text/css", or
+   #    "script" and the MIME type is not a JavaScript MIME type.
+   Header set X-Content-Type-Options "nosniff"
+
+   # Prevent from Clickjacking by allowing frame to be displayed only
+   # on the same origin as the page itself.
+   Header always set X-Frame-Options SAMEORIGIN
+
+   # Force HTTPS (don't use this if you're still on http)
+   # env=HTTPS didn't work... but while "expr=%{HTTPS} == 'on'" is well working
+   # see https://stackoverflow.com/questions/24144552/how-to-set-hsts-header-from-htaccess-only-on-https#comment81632711_24145033
+   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" "expr=%{HTTPS} == 'on'"
+
+   # Enables XSS filtering. Rather than sanitizing the page, the browser
+   # will prevent rendering of the page if an attack is detected.
+   Header always set X-XSS-Protection "1; mode=block"
+
+   # The Referrer header will be omitted entirely. No referrer information is
+   # sent along with requests.
+   Header always set Referrer-Policy "no-referrer"
+
+   # CSP : define / whitelist domains where files can be loaded
+   # (f.i. fonts.googleapis.com, ...)
+   # This should be done for scripts, images, styles, frame, ...
+   # Replace XXXXXXXXXXXXXX by your site name like https://www.yoursite.com
+
+   Header set Content-Security-Policy: "default-src 'self'; base-uri 'self'; form-action 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://ajax.googleapis.com https://www.google.com https://www.google-analytics.com https://code.jquery.com https://www.gstatic.com https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://unpkg.com; font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com; style-src 'self' 'unsafe-inline' https://maxcdn.bootstrapcdn.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com; img-src 'self' data: https://www.paypal.com https://raw.githubusercontent.com; frame-src XXXXXXXXXXXXXX https://www.google.com https://www.youtube.com; frame-ancestors 'none'"
+</IfModule>
+```
 
 ### Files
 
