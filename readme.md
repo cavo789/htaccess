@@ -6,23 +6,24 @@
 
 ## Table of Contents
 
-* [CSP - Content Security Policy](#csp---content-security-policy)
-* [Files](#files)
+* [Table of Contents](#table-of-contents)
+  * [CSP - Content Security Policy](#csp---content-security-policy)
+  * [Files](#files)
     * [Block access to some files based on their names](#block-access-to-some-files-based-on-their-names)
     * [Block access to some files based on their extensions](#block-access-to-some-files-based-on-their-extensions)
     * [Block access to hidden files & directories](#block-access-to-hidden-files--directories)
-* [Force](#force)
+  * [Force](#force)
     * [Force download](#force-download)
-    * [Prevent downloading](#prevent-downloading)
+      * [Prevent downloading](#prevent-downloading)
     * [Force https and www, compatible hstspreload](#force-https-and-www-compatible-hstspreload)
-* [Misc](#misc)
+  * [Misc](#misc)
     * [Disable error reporting](#disable-error-reporting)
     * [Enable error reporting](#enable-error-reporting)
     * [Enable a maintenance mode](#enable-a-maintenance-mode)
-* [Optimization](#optimization)
-    * [Compress files based on their type or extensions.](#compress-files-based-on-their-type-or-extensions)
+  * [Optimization](#optimization)
+    * [Compress files based on their type or extensions](#compress-files-based-on-their-type-or-extensions)
     * [Add expiration (expires headers)](#add-expiration-expires-headers)
-* [Protection](#protection)
+  * [Protection](#protection)
     * [Deny All Access](#deny-all-access)
     * [Deny All Access except you](#deny-all-access-except-you)
     * [Stops a browser from trying to MIME-sniff](#stops-a-browser-from-trying-to-mime-sniff)
@@ -30,15 +31,15 @@
     * [Disable script execution](#disable-script-execution)
     * [Disallow listing for directories](#disallow-listing-for-directories)
     * [htpasswd](#htpasswd)
-    * [File password](#file-password)
-    * [Folder password](#folder-password)
+      * [File password](#file-password)
+      * [Folder password](#folder-password)
     * [Whitelist - Disallow access to all files except the ones mentioned](#whitelist---disallow-access-to-all-files-except-the-ones-mentioned)
-* [Redirect](#redirect)
+  * [Redirect](#redirect)
     * [Redirect an entire site](#redirect-an-entire-site)
     * [Permanent redirection](#permanent-redirection)
     * [Temporary redirection](#temporary-redirection)
     * [Redirect a subfolder](#redirect-a-subfolder)
-* [Search engine](#search-engine)
+  * [Search engine](#search-engine)
     * [Disallow indexing](#disallow-indexing)
 * [License](#license)
 
@@ -168,17 +169,17 @@ Also, test your site with [https://hstspreload.org/](https://hstspreload.org/) t
 ```htaccess
 <IfModule mod_rewrite.c>
 
-	# Rewrite the URL to force https and www.
-	RewriteEngine On
+ # Rewrite the URL to force https and www.
+ RewriteEngine On
 
-	# Compliant with hstspreload.org : first redirect to https if needed
-	RewriteCond %{HTTPS} !=on
-	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+ # Compliant with hstspreload.org : first redirect to https if needed
+ RewriteCond %{HTTPS} !=on
+ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-	#   then redirect to www. when the prefix wasn't mentionned
-	# hstspreload.org seems to not really like to make the two at once
-	RewriteCond %{HTTP_HOST} !^www\.
-	RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+ #   then redirect to www. when the prefix wasn't mentionned
+ # hstspreload.org seems to not really like to make the two at once
+ RewriteCond %{HTTP_HOST} !^www\.
+ RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 </IfModule>
 ```
@@ -230,7 +231,7 @@ Redirect every requests done to your site to a specific page (called `maintenanc
 
 ### Optimization
 
-#### Compress files based on their type or extensions.
+#### Compress files based on their type or extensions
 
 ```htaccess
 <IfModule mod_deflate.c>
@@ -490,6 +491,12 @@ or solve spelling issue by f.i. redirect every requests to the `fruit` folder to
 
 ```htaccess
 RedirectMatch 301 ^/fruit/(.*)$ /fruits/$1
+```
+
+Another example: redirecting URLs from `/archive/2020/...` to `/2020/...`.
+
+```htaccess
+RewriteRule ^archive/2020/(.*)$ /2020/$1 [R=301,NC,L]
 ```
 
 ### Search engine
