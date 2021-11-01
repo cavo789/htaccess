@@ -1,6 +1,6 @@
-![banner](image/banner.jpg)
-
 # htaccess
+
+![banner](./banner.svg)
 
 > Some tips and tricks for your .htaccess file (Apache)
 
